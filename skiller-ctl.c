@@ -202,6 +202,7 @@ int main(int argc, char **argv) {
 	char list_colors;
 	char always_power_on;
 	
+	color = 0;
 	always_power_on = 0;
 	device = 0;
 	list_devices = 0;
@@ -403,17 +404,19 @@ int main(int argc, char **argv) {
 			unsigned char color_idx;
 			
 			color_idx = 0;
-			c = kbd_type->colors[color_idx];
-			while (c) {
-				if (!strcmp(c, color)) {
-					break;
-				}
-				color_idx++;
+			if (color) {
 				c = kbd_type->colors[color_idx];
-			}
-			if (!c) {
-				fprintf(stderr, "error, color \"%s\" not available\n", color);
-				exit(1);
+				while (c) {
+					if (!strcmp(c, color)) {
+						break;
+					}
+					color_idx++;
+					c = kbd_type->colors[color_idx];
+				}
+				if (!c) {
+					fprintf(stderr, "error, color \"%s\" not available\n", color);
+					exit(1);
+				}
 			}
 			
 			memset(cmd, 0, sizeof(cmd));

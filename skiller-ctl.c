@@ -80,7 +80,7 @@ void show_help(char **argv) {
 	fprintf(stderr, "--------\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "  -a                always power on the device (root privileges required)\n");
-	fprintf(stderr, "  -b <number>       brightness between 0 and 10 (default)\n");
+	fprintf(stderr, "  -b <number>       brightness between 0 and 10 (default: 10)\n");
 	fprintf(stderr, "  -B                pulsing brightness\n");
 	fprintf(stderr, "  -c <string>       set color (query possible values with -C)\n");
 	fprintf(stderr, "  -C                list supported colors\n");

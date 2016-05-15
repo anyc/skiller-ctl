@@ -82,7 +82,8 @@ void show_help(char **argv) {
 	fprintf(stderr, "  -a                always power on the device (root privileges required)\n");
 	fprintf(stderr, "  -b <number>       brightness between 0 and 10 (default: 10)\n");
 	fprintf(stderr, "  -B                pulsing brightness\n");
-	fprintf(stderr, "  -c <string>       set color (query possible values with -C)\n");
+	fprintf(stderr, "  -c <string>       set color (query possible values with -C,\n");
+	fprintf(stderr, "                    default is the first available)\n");
 	fprintf(stderr, "  -C                list supported colors\n");
 	fprintf(stderr, "  -d <number>       select device (default: 0)\n");
 	fprintf(stderr, "  -i                disco mode - pulsing brightness with changing color\n");
@@ -203,6 +204,7 @@ int main(int argc, char **argv) {
 	char always_power_on;
 	
 	color = 0;
+	kbd_type = 0;
 	always_power_on = 0;
 	device = 0;
 	list_devices = 0;
@@ -279,28 +281,13 @@ int main(int argc, char **argv) {
 			change_profile = 1;
 			break;
 		case 'r':
-			{
-			unsigned int *uint_it;
-			
 			if (sscanf(optarg, "%u", &polling_rate) != 1) {
 				fprintf(stderr, "error, cannot parse \"%s\" for the polling rate\n", optarg);
 				show_help(argv);
 				exit(1);
 			}
-			uint_it = kbd_type->polling_rates;
-			while (*uint_it) {
-				if (*uint_it == polling_rate)
-					break;
-				uint_it++;
-			}
-			if (!uint_it || *uint_it != polling_rate) {
-				fprintf(stderr, "error, unsupported value for the polling rate\n");
-				show_help(argv);
-				exit(1);
-			}
 			change_polling = 1;
 			break;
-			}
 		case 'w':
 			if (sscanf(optarg, "%hhu", &windows_key_state) != 1) {
 				fprintf(stderr, "error, cannot parse \"%s\" for windows key state\n", optarg);
@@ -436,17 +423,29 @@ int main(int argc, char **argv) {
 		}
 		
 		if (change_polling) {
-			memset(cmd, 0, sizeof(cmd));
-			cmd[0] = kbd_type->prefix;
-			cmd[1] = kbd_type->change_polling_rate;
-			cmd[2] = 1000/polling_rate;
+			unsigned int *uint_it;
 			
-			DBG("[p%u] change polling rate to %u\n", profile_idx, 1000/polling_rate);
-			bytes_written = libusb_control_transfer(dev_handle, 0x21, 0x9, 0x0307, 0x1, cmd, 8, 0);
-			if (bytes_written != 8) {
-				fprintf(stderr, "error sending control URB (%d): %s\n", bytes_written, libusb_strerror(r));
+			uint_it = kbd_type->polling_rates;
+			while (*uint_it) {
+				if (*uint_it == polling_rate)
+					break;
+				uint_it++;
 			}
-			usleep(100000);
+			if (!uint_it || *uint_it != polling_rate) {
+				fprintf(stderr, "error, unsupported value for the polling rate\n");
+			} else {
+				memset(cmd, 0, sizeof(cmd));
+				cmd[0] = kbd_type->prefix;
+				cmd[1] = kbd_type->change_polling_rate;
+				cmd[2] = 1000/polling_rate;
+				
+				DBG("[p%u] change polling rate to %u\n", profile_idx, 1000/polling_rate);
+				bytes_written = libusb_control_transfer(dev_handle, 0x21, 0x9, 0x0307, 0x1, cmd, 8, 0);
+				if (bytes_written != 8) {
+					fprintf(stderr, "error sending control URB (%d): %s\n", bytes_written, libusb_strerror(r));
+				}
+				usleep(100000);
+			}
 		}
 		
 		r = libusb_release_interface(dev_handle, 1);

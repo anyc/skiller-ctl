@@ -6,8 +6,9 @@ LDLIBS+=$(shell pkg-config --libs libusb-1.0)
 
 CTLAPP=skiller-ctl
 
-prefix ?= /usr/local
-bindir ?= $(prefix)/bin
+prefix ?= /usr
+exec_prefix ?= $(prefix)
+bindir ?= $(exec_prefix)/bin/
 
 .phony: clean install
 
@@ -22,4 +23,4 @@ clean:
 	rm -rf $(CTLAPP)
 
 install:
-	install -m 0755 $(CTLAPP) $(bindir)/
+	install -D -m 0755 $(CTLAPP) $(DESTDIR)$(bindir)$(CTLAPP)
